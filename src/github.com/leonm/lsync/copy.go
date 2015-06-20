@@ -23,7 +23,6 @@ func getList(url string) []FileEntry {
 func getFiles(host string, listname string, out chan FileEntry) {
   fileList := getList("http://"+host+":1978/"+listname)
   for _,f := range fileList {
-    // println(f.Path)
     out <- f
   }
   close(out)
