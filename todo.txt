@@ -1,0 +1,11 @@
+multiple workers for hashing
+gzip transfer
+do not recalculate hash if the time/size hasn't changed
+only add files to the new-file-list if hash has changed
+half-decent logging
+check hash after downloading file
+set downloaded file modtime
+don't download if filesize & modtime is the same
+download files to .part and move into place
+resume broken downloads
+command line args error checking & better docs
