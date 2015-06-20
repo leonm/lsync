@@ -17,6 +17,12 @@ func main() {
       Usage:   "run an lsync server",
       Action:  newServerCommand(),
     },
+    {
+      Name:    "copy",
+      Aliases: []string{"C"},
+      Usage:   "copy files from an lsync server",
+      Action:  newCopyCommand(),
+    },
   }
 
   app.Run(os.Args)
