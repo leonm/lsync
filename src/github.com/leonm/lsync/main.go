@@ -14,13 +14,13 @@ func main() {
     {
       Name:    "server",
       Aliases: []string{"S"},
-      Usage:   "run an lsync server",
+      Usage:   "run an lsync server: lsync S <source-directory>",
       Action:  newServerCommand(),
     },
     {
       Name:    "copy",
       Aliases: []string{"C"},
-      Usage:   "copy files from an lsync server",
+      Usage:   "copy files from an lsync server: lsync C <host> <target-directory>",
       Action:  newCopyCommand(),
     },
   }
