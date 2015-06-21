@@ -1,6 +1,5 @@
-read file-list as well as new-file-list in copy
+multiple worksers for downloading
 check hash after downloading file
-don't download if filesize & modtime is the same
 download files to .part and move into place
 multiple workers for hashing
 gzip transfer
