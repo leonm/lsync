@@ -34,20 +34,36 @@ func ensureDirectory(targetPath string, f *FileEntry) {
   check(err)
 }
 
+func downloadFile(targetPath string, host string, f *FileEntry) {
+  targetFilePath := filepath.Join(targetPath,f.Path)
+  out, err := os.Create(targetFilePath)
+  check(err)
+  defer out.Close()
+  resp, err := http.Get("http://"+host+":1978/files/"+f.Path)
+  defer resp.Body.Close()
+  io.Copy(out, resp.Body)
+  os.Chtimes(targetFilePath, f.Updated, f.Updated)
+}
+
+func needsDownloading (targetPath string, f *FileEntry) bool {
+  targetFilePath := filepath.Join(targetPath,f.Path)
+  fileInfo, err := os.Stat(targetFilePath);
+  if os.IsNotExist(err) {
+    return true
+  }
+  check(err)
+  return !fileInfo.ModTime().Equal(f.Updated) || f.Size != fileInfo.Size()
+}
+
 func getFiles(host string, targetPath string, listname string) {
   remoteFiles := make(chan FileEntry, 100)
   go getFileList(host, listname, remoteFiles)
 
   for f := range remoteFiles {
     ensureDirectory(targetPath, &f)
-    targetFilePath := filepath.Join(targetPath,f.Path)
-    out, err := os.Create(targetFilePath)
-    check(err)
-    defer out.Close()
-    resp, err := http.Get("http://"+host+":1978/files/"+f.Path)
-    defer resp.Body.Close()
-    io.Copy(out, resp.Body)
-    os.Chtimes(targetFilePath, f.Updated, f.Updated)
+    if (needsDownloading(targetPath, &f)) {
+      downloadFile(targetPath, host, &f)
+    }
   }
 }
 
