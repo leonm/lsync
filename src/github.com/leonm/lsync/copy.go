@@ -20,7 +20,7 @@ func getList(url string) []FileEntry {
   return fileList
 }
 
-func getFiles(host string, listname string, out chan FileEntry) {
+func getFileList(host string, listname string, out chan FileEntry) {
   fileList := getList("http://"+host+":1978/"+listname)
   for _,f := range fileList {
     out <- f
@@ -28,23 +28,34 @@ func getFiles(host string, listname string, out chan FileEntry) {
   close(out)
 }
 
+func ensureDirectory(targetPath string, f *FileEntry) {
+  dir := filepath.Dir(f.Path)
+  err := os.MkdirAll(filepath.Join(targetPath,dir),0777)
+  check(err)
+}
+
+func getFiles(host string, targetPath string, listname string) {
+  remoteFiles := make(chan FileEntry, 100)
+  go getFileList(host, listname, remoteFiles)
+
+  for f := range remoteFiles {
+    ensureDirectory(targetPath, &f)
+    targetFilePath := filepath.Join(targetPath,f.Path)
+    out, err := os.Create(targetFilePath)
+    check(err)
+    defer out.Close()
+    resp, err := http.Get("http://"+host+":1978/files/"+f.Path)
+    defer resp.Body.Close()
+    io.Copy(out, resp.Body)
+    os.Chtimes(targetFilePath, f.Updated, f.Updated)
+  }
+}
+
 func newCopyCommand() func (c *cli.Context) {
   return func (c *cli.Context) {
     host := c.Args()[0]
     targetPath := c.Args()[1]
-    remoteFiles := make(chan FileEntry, 100)
-    go getFiles(host,"new-file-list",remoteFiles)
-
-    for f := range remoteFiles {
-      dir := filepath.Dir(f.Path)
-      err := os.MkdirAll(filepath.Join(targetPath,dir),0777)
-      check(err)
-      out, err := os.Create(filepath.Join(targetPath,f.Path))
-      check(err)
-      defer out.Close()
-      resp, err := http.Get("http://"+host+":1978/files/"+f.Path)
-      defer resp.Body.Close()
-      io.Copy(out, resp.Body)
-    }
+    getFiles(host, targetPath, "new-file-list")
+    getFiles(host, targetPath, "file-list")
   }
 }
