@@ -19,9 +19,22 @@ type FileEntry struct {
   Hash uint64
 }
 
+type FileInfo interface {
+  Mode() os.FileMode
+  ModTime() time.Time
+  Size() int64
+}
+
+type WalkFunc func(path string, info FileInfo, err error) error
+
+func walk(root string, walkFn WalkFunc) error {
+  return filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
+    return walkFn(root, f, err)
+  })
+}
 
 func scan (root string, out chan *FileEntry) {
-  err := filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
+  err := walk(root, func(path string, f FileInfo, err error) error {
     check(err)
     if (f.Mode().IsRegular()) {
       relativePath, err := filepath.Rel(root,path)
