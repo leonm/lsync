@@ -19,27 +19,36 @@ type FileEntry struct {
   Hash uint64
 }
 
-type FileInfo interface {
-  Mode() os.FileMode
-  ModTime() time.Time
-  Size() int64
+type FileInfo struct {
+  regular bool
+  modTime time.Time
+  size int64
 }
 
-type WalkFunc func(path string, info FileInfo, err error) error
+type RootDirectory struct {
+  root string
+  walk func (root string, walkFn WalkFunc) error
+}
+
+type WalkFunc func(path string, info *FileInfo, err error) error
+
+func NewRootDirectory(root string) *RootDirectory {
+  return &RootDirectory {root,walk}
+}
 
 func walk(root string, walkFn WalkFunc) error {
   return filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
-    return walkFn(root, f, err)
+    return walkFn(root, &FileInfo {f.Mode().IsRegular(), f.ModTime(), f.Size()}, err)
   })
 }
 
-func scan (root string, out chan *FileEntry) {
-  err := walk(root, func(path string, f FileInfo, err error) error {
+func (rootDirectory *RootDirectory) scan (out chan *FileEntry) {
+  err := walk(rootDirectory.root, func(path string, f *FileInfo, err error) error {
     check(err)
-    if (f.Mode().IsRegular()) {
-      relativePath, err := filepath.Rel(root,path)
+    if (f.regular) {
+      relativePath, err := filepath.Rel(rootDirectory.root,path)
       check(err)
-      out <- &FileEntry{relativePath, f.Size(), f.ModTime(), 0}
+      out <- &FileEntry{relativePath, f.size, f.modTime, 0}
     }
     return nil
   })

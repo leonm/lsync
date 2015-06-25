@@ -22,7 +22,8 @@ func keepUpToDate(fileList *FileList, rootPath string) {
     println("Updating...")
     scannedFiles := make(chan *FileEntry, 100)
     hashedFiles :=  make(chan *FileEntry, 100)
-    go scan(rootPath, scannedFiles)
+    rootDirectory := NewRootDirectory (rootPath)
+    go rootDirectory.scan(scannedFiles)
     go hash(rootPath, scannedFiles, hashedFiles)
     fileList.update(hashedFiles)
 
