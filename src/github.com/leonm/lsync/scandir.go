@@ -43,7 +43,7 @@ func walk(root string, walkFn WalkFunc) error {
 }
 
 func (rootDirectory *RootDirectory) scan (out chan *FileEntry) {
-  err := walk(rootDirectory.root, func(path string, f *FileInfo, err error) error {
+  err := rootDirectory.walk(rootDirectory.root, func(path string, f *FileInfo, err error) error {
     check(err)
     if (f.regular) {
       relativePath, err := filepath.Rel(rootDirectory.root,path)
