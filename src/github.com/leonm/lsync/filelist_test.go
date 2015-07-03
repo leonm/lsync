@@ -29,3 +29,27 @@ func TestCurrentListGetsAddedTo(t *testing.T) {
   if (len(fileList.New) != 1) { t.Errorf("new list should have an entry") }
 
 }
+
+func TestFileEntryIsUpToDateWhenSizeAndTimeMatches(t *testing.T) {
+  now := time.Now()
+  entry := &FileEntry{"test1",55,now,0}
+  if (!entry.IsUptoDate(now,55)) {
+    t.Errorf("file entry should be up to date")
+  }
+}
+
+func TestFileEntryIsNotUpToDateWhenSizeDiffers(t *testing.T) {
+  now := time.Now()
+  entry := &FileEntry{"test1",55,now,0}
+  if (entry.IsUptoDate(now,77)) {
+    t.Errorf("file entry should not be up to date")
+  }
+}
+
+func TestFileEntryIsNotUpToDateWhenTimeDiffers(t *testing.T) {
+  now := time.Now()
+  entry := &FileEntry{"test1",55,now,0}
+  if (entry.IsUptoDate(time.Now(),55)) {
+    t.Errorf("file entry should not be up to date")
+  }
+}

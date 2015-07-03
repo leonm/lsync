@@ -52,7 +52,7 @@ func needsDownloading (targetPath string, f *FileEntry) bool {
     return true
   }
   check(err)
-  return !fileInfo.ModTime().Equal(f.Updated) || f.Size != fileInfo.Size()
+  return !f.IsUptoDate(fileInfo.ModTime(), fileInfo.Size())
 }
 
 func getFiles(host string, targetPath string, listname string) {

@@ -30,3 +30,7 @@ func (list *FileList) update (in chan *FileEntry) {
 
   list.Current = working
 }
+
+func (fileEntry *FileEntry) IsUptoDate(t time.Time, size int64) bool {
+  return fileEntry.Updated.Equal(t) && fileEntry.Size == size
+}
