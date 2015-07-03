@@ -28,12 +28,13 @@ type FileInfo struct {
 type RootDirectory struct {
   root string
   walk func (root string, walkFn WalkFunc) error
+  calculateHash func(filename string) uint64
 }
 
 type WalkFunc func(path string, info *FileInfo, err error) error
 
 func NewRootDirectory(root string) *RootDirectory {
-  return &RootDirectory {root,walk}
+  return &RootDirectory {root,walk,calculateHash}
 }
 
 func walk(root string, walkFn WalkFunc) error {
@@ -42,7 +43,17 @@ func walk(root string, walkFn WalkFunc) error {
   })
 }
 
-func (rootDirectory *RootDirectory) scan (out chan *FileEntry) {
+func calculateHash (filename string) uint64 {
+  hasher := fnv.New64a()
+  hasher.Reset()
+  file, err := os.Open(filename)
+  check(err)
+  io.Copy(hasher,file)
+  file.Close()
+  return hasher.Sum64()
+}
+
+func (rootDirectory *RootDirectory) scan(out chan *FileEntry) {
   err := rootDirectory.walk(rootDirectory.root, func(path string, f *FileInfo, err error) error {
     check(err)
     if (f.regular) {
@@ -57,16 +68,10 @@ func (rootDirectory *RootDirectory) scan (out chan *FileEntry) {
 
 }
 
-func hash(root string, in chan *FileEntry, out chan *FileEntry) {
-  hasher := fnv.New64a()
+func (rootDirectory *RootDirectory) hash(in chan *FileEntry, out chan *FileEntry) {
 
   for f := range in {
-    hasher.Reset()
-    file, err := os.Open(filepath.Join(root,f.Path))
-    check(err)
-    io.Copy(hasher,file)
-    file.Close()
-    f.Hash = hasher.Sum64()
+    f.Hash = rootDirectory.calculateHash(filepath.Join(rootDirectory.root,f.Path))
     out <- f
   }
   close(out)

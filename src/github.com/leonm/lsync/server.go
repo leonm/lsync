@@ -24,7 +24,7 @@ func keepUpToDate(fileList *FileList, rootPath string) {
     hashedFiles :=  make(chan *FileEntry, 100)
     rootDirectory := NewRootDirectory (rootPath)
     go rootDirectory.scan(scannedFiles)
-    go hash(rootPath, scannedFiles, hashedFiles)
+    go rootDirectory.hash(scannedFiles, hashedFiles)
     fileList.update(hashedFiles)
 
     time.Sleep(time.Duration(240)*time.Second)
