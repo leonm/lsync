@@ -35,7 +35,7 @@ func newServerCommand() func (c *cli.Context) {
   return func (c *cli.Context) {
     rootPath := c.Args()[0]
 
-    fileList := &FileList{[]FileEntry{},[]FileEntry{}}
+    fileList := NewFileList()
 
     go keepUpToDate(fileList, rootPath)
 

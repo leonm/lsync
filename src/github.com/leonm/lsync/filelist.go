@@ -14,6 +14,10 @@ type FileList struct {
   New []FileEntry
 }
 
+func NewFileList() *FileList {
+  return &FileList{[]FileEntry{},[]FileEntry{}}
+}
+
 func (list *FileList) update (in chan *FileEntry) {
 
   list.New = []FileEntry{}
