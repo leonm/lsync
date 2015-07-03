@@ -1,5 +1,14 @@
 package main
 
+import "time"
+
+type FileEntry struct {
+  Path string
+  Size int64
+  Updated time.Time
+  Hash uint64
+}
+
 type FileList struct {
   Current []FileEntry
   New []FileEntry

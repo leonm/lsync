@@ -6,18 +6,6 @@ import "path/filepath"
 import "time"
 import "hash/fnv"
 
-func check(e error) {
-  if e != nil {
-    panic(e)
-  }
-}
-
-type FileEntry struct {
-  Path string
-  Size int64
-  Updated time.Time
-  Hash uint64
-}
 
 type FileInfo struct {
   regular bool
