@@ -37,6 +37,7 @@ func ensureDirectory(targetPath string, f *FileEntry) {
 }
 
 func downloadFile(targetPath string, host string, f *FileEntry) {
+  Info.Printf("Starting to download %s",f.Path)
   targetFilePath := filepath.Join(targetPath,f.Path)
   out, err := os.Create(targetFilePath)
   check(err)
@@ -46,6 +47,7 @@ func downloadFile(targetPath string, host string, f *FileEntry) {
   defer resp.Body.Close()
   io.Copy(out, resp.Body)
   os.Chtimes(targetFilePath, f.Updated, f.Updated)
+  Info.Printf("Finished downloading %s",f.Path)
 }
 
 func needsDownloading (targetPath string, f *FileEntry) bool {
