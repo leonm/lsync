@@ -4,7 +4,6 @@ import "github.com/codegangsta/cli"
 import "net/http"
 import "time"
 import "encoding/json"
-import "fmt"
 
 func filesHandler(fileList *FileList) func(w http.ResponseWriter, r *http.Request) {
   return func (w http.ResponseWriter, req *http.Request) {

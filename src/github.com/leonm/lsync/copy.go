@@ -9,6 +9,7 @@ import "io"
 import "path/filepath"
 
 func getList(url string) []FileEntry {
+  Info.Println("Getting List "+url);
   res, err := http.Get(url)
   check(err)
   defer res.Body.Close()
@@ -17,6 +18,7 @@ func getList(url string) []FileEntry {
   fileList := []FileEntry{}
   err = json.Unmarshal(body, &fileList)
   check(err)
+  Info.Printf("Got %d entries",len(fileList))
   return fileList
 }
 

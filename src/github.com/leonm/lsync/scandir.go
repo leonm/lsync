@@ -27,7 +27,7 @@ func NewRootDirectory(root string) *RootDirectory {
 
 func walk(root string, walkFn WalkFunc) error {
   return filepath.Walk(root, func(path string, f os.FileInfo, err error) error {
-    return walkFn(root, &FileInfo {f.Mode().IsRegular(), f.ModTime(), f.Size()}, err)
+    return walkFn(path, &FileInfo {f.Mode().IsRegular(), f.ModTime(), f.Size()}, err)
   })
 }
 
