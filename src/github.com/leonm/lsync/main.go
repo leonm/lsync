@@ -17,10 +17,6 @@ func main() {
     },
   }
 
-  app.Action = func(c *cli.Context) {
-    println ("DSF:")
-  }
-
   app.Commands = []cli.Command{
     {
       Name:    "server",
