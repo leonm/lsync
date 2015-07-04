@@ -40,6 +40,7 @@ func downloadFile(targetPath string, host string, f *FileEntry) {
   check(err)
   defer out.Close()
   resp, err := http.Get("http://"+host+":1978/files/"+f.Path)
+  check(err)
   defer resp.Body.Close()
   io.Copy(out, resp.Body)
   os.Chtimes(targetFilePath, f.Updated, f.Updated)
