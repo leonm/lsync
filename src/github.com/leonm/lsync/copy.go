@@ -70,6 +70,13 @@ func getFiles(host string, targetPath string, listname string) {
 
 func newCopyCommand() func (c *cli.Context) {
   return func (c *cli.Context) {
+
+    if (c.GlobalIsSet("log-file")) {
+      InitFileLogging(c.GlobalString("log-file"))
+    } else {
+      InitStdOutLogging()
+    }
+
     host := c.Args()[0]
     targetPath := c.Args()[1]
     getFiles(host, targetPath, "new-file-list")

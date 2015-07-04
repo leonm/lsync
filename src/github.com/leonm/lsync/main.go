@@ -10,6 +10,17 @@ func main() {
 
   app.Name = "lsync"
 
+  app.Flags = []cli.Flag {
+    cli.StringFlag{
+      Name: "log-file, L",
+      Usage: "Location of the log file.  Stdout by default",
+    },
+  }
+
+  app.Action = func(c *cli.Context) {
+    println ("DSF:")
+  }
+
   app.Commands = []cli.Command{
     {
       Name:    "server",

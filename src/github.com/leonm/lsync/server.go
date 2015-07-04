@@ -4,6 +4,7 @@ import "github.com/codegangsta/cli"
 import "net/http"
 import "time"
 import "encoding/json"
+import "fmt"
 
 func filesHandler(fileList *FileList) func(w http.ResponseWriter, r *http.Request) {
   return func (w http.ResponseWriter, req *http.Request) {
@@ -19,7 +20,7 @@ func newFilesHandler(fileList *FileList) func(w http.ResponseWriter, r *http.Req
 
 func keepUpToDate(fileList *FileList, rootPath string) {
   for {
-    println("Updating...")
+    Info.Println("Updating")
     scannedFiles := make(chan *FileEntry, 100)
     hashedFiles :=  make(chan *FileEntry, 100)
     rootDirectory := NewRootDirectory (rootPath)
@@ -33,6 +34,12 @@ func keepUpToDate(fileList *FileList, rootPath string) {
 
 func newServerCommand() func (c *cli.Context) {
   return func (c *cli.Context) {
+    if (c.GlobalIsSet("log-file")) {
+      InitFileLogging(c.GlobalString("log-file"))
+    } else {
+      InitStdOutLogging()
+    }
+
     rootPath := c.Args()[0]
 
     fileList := NewFileList()
