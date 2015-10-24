@@ -45,9 +45,13 @@ func downloadFile(targetPath string, host string, f *FileEntry) {
   resp, err := http.Get("http://"+host+":1978/files/"+f.Path)
   check(err)
   defer resp.Body.Close()
-  io.Copy(out, resp.Body)
-  os.Chtimes(targetFilePath, f.Updated, f.Updated)
-  Info.Printf("Finished downloading %s",f.Path)
+  if (resp.StatusCode != 200) {
+    Error.Printf("Failed to download %s : %s",f.Path,resp.Status)
+  } else {
+    io.Copy(out, resp.Body)
+    os.Chtimes(targetFilePath, f.Updated, f.Updated)
+    Info.Printf("Finished downloading %s",f.Path)
+  }
 }
 
 func needsDownloading (targetPath string, f *FileEntry) bool {
