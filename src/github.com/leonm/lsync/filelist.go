@@ -3,34 +3,34 @@ package main
 import "time"
 
 type FileEntry struct {
-  Path string
-  Size int64
-  Updated time.Time
-  Hash uint64
+	Path    string
+	Size    int64
+	Updated time.Time
+	Hash    uint64
 }
 
 type FileList struct {
-  Current []FileEntry
-  New []FileEntry
+	Current []FileEntry
+	New     []FileEntry
 }
 
 func NewFileList() *FileList {
-  return &FileList{[]FileEntry{},[]FileEntry{}}
+	return &FileList{[]FileEntry{}, []FileEntry{}}
 }
 
-func (list *FileList) update (in chan *FileEntry) {
+func (list *FileList) update(in chan *FileEntry) {
 
-  list.New = []FileEntry{}
-  working := []FileEntry{}
+	list.New = []FileEntry{}
+	working := []FileEntry{}
 
-  for f := range in {
-    list.New = append(list.New, *f)
-    working = append(working, *f)
-  }
+	for f := range in {
+		list.New = append(list.New, *f)
+		working = append(working, *f)
+	}
 
-  list.Current = working
+	list.Current = working
 }
 
 func (fileEntry *FileEntry) IsUptoDate(t time.Time, size int64) bool {
-  return fileEntry.Updated.Equal(t) && fileEntry.Size == size
+	return fileEntry.Updated.Equal(t) && fileEntry.Size == size
 }
