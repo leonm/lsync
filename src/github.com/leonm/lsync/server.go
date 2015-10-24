@@ -47,7 +47,7 @@ func newServerCommand() func (c *cli.Context) {
 
     http.HandleFunc("/file-list", filesHandler(fileList))
     http.HandleFunc("/new-file-list", newFilesHandler(fileList))
-    http.Handle("/files/", http.StripPrefix("/files/", http.FileServer(http.Dir(rootPath))))
+    http.Handle("/files/", http.StripPrefix("/files/", GzipHandler (http.FileServer(http.Dir(rootPath)))))
 
     err := http.ListenAndServe(":1978", nil)
     check(err)
