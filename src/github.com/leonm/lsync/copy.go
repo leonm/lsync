@@ -50,17 +50,18 @@ func downloadFile(targetPath string, host string, f *FileEntry) {
 		Error.Printf("Failed to download %s : %s", f.Path, resp.Status)
 	} else {
 		targetFilePath := filepath.Join(targetPath, f.Path)
-		out, err := os.Create(targetFilePath)
+		out, err := os.Create(targetFilePath + ".part")
 		check(err)
 		hasher := fnv.New64a()
 		defer out.Close()
 		io.Copy(io.MultiWriter(out, hasher), resp.Body)
-		os.Chtimes(targetFilePath, f.Updated, f.Updated)
 		if hasher.Sum64() != f.Hash {
-			err := os.Remove(targetFilePath)
+			err := os.Remove(targetFilePath + ".part")
 			check(err)
 			Error.Printf("Failed to download %s.  Hash Error", f.Path)
 		} else {
+			os.Rename(targetFilePath+".part", targetFilePath)
+			os.Chtimes(targetFilePath, f.Updated, f.Updated)
 			Info.Printf("Finished downloading %s", f.Path)
 		}
 	}
