@@ -6,6 +6,7 @@ import "io/ioutil"
 import "encoding/json"
 import "os"
 import "io"
+import "net/url"
 import "path/filepath"
 
 func getList(url string) []FileEntry {
@@ -42,7 +43,9 @@ func downloadFile(targetPath string, host string, f *FileEntry) {
   out, err := os.Create(targetFilePath)
   check(err)
   defer out.Close()
-  resp, err := http.Get("http://"+host+":1978/files/"+f.Path)
+  fileUrl, err := url.Parse("http://"+host+":1978")
+  fileUrl.Path += "/files/"+f.Path
+  resp, err := http.Get(fileUrl.String())
   check(err)
   defer resp.Body.Close()
   if (resp.StatusCode != 200) {
