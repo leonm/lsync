@@ -9,6 +9,7 @@ import "io"
 import "net/url"
 import "path/filepath"
 import "sync"
+import "hash/fnv"
 
 func getList(url string) []FileEntry {
   Info.Println("Getting List "+url);
@@ -40,10 +41,6 @@ func ensureDirectory(targetPath string, f *FileEntry) {
 
 func downloadFile(targetPath string, host string, f *FileEntry) {
   Info.Printf("Starting to download %s",f.Path)
-  targetFilePath := filepath.Join(targetPath,f.Path)
-  out, err := os.Create(targetFilePath)
-  check(err)
-  defer out.Close()
   fileUrl, err := url.Parse("http://"+host+":1978")
   fileUrl.Path += "/files/"+f.Path
   resp, err := http.Get(fileUrl.String())
@@ -52,9 +49,20 @@ func downloadFile(targetPath string, host string, f *FileEntry) {
   if (resp.StatusCode != 200) {
     Error.Printf("Failed to download %s : %s",f.Path,resp.Status)
   } else {
-    io.Copy(out, resp.Body)
+    targetFilePath := filepath.Join(targetPath,f.Path)
+    out, err := os.Create(targetFilePath)
+    check(err)
+    hasher := fnv.New64a()
+    defer out.Close()
+    io.Copy(io.MultiWriter(out,hasher), resp.Body)
     os.Chtimes(targetFilePath, f.Updated, f.Updated)
-    Info.Printf("Finished downloading %s",f.Path)
+    if (hasher.Sum64() != f.Hash) {
+      err := os.Remove(targetFilePath)
+      check(err)
+      Error.Printf("Failed to download %s.  Hash Error",f.Path)
+    } else {
+      Info.Printf("Finished downloading %s",f.Path)
+    }
   }
 }
 
