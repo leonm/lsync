@@ -8,6 +8,7 @@ import "os"
 import "io"
 import "net/url"
 import "path/filepath"
+import "sync"
 
 func getList(url string) []FileEntry {
   Info.Println("Getting List "+url);
@@ -67,16 +68,30 @@ func needsDownloading (targetPath string, f *FileEntry) bool {
   return !f.IsUptoDate(fileInfo.ModTime(), fileInfo.Size())
 }
 
-func getFiles(host string, targetPath string, listname string) {
-  remoteFiles := make(chan FileEntry, 100)
-  go getFileList(host, listname, remoteFiles)
-
+func downloadFiles(host string, targetPath string, remoteFiles chan FileEntry) {
   for f := range remoteFiles {
     ensureDirectory(targetPath, &f)
     if (needsDownloading(targetPath, &f)) {
       downloadFile(targetPath, host, &f)
     }
   }
+}
+
+func startDownloadWorker(host string, targetPath string, remoteFiles chan FileEntry,  wg *sync.WaitGroup) {
+  downloadFiles(host, targetPath, remoteFiles)
+  wg.Done()
+}
+
+func getFiles(host string, targetPath string, listname string) {
+  remoteFiles := make(chan FileEntry, 100)
+  go getFileList(host, listname, remoteFiles)
+  var wg sync.WaitGroup
+  for i := 1; i <= 5; i++ {
+    Info.Printf("Starting Worker %d",i)
+    wg.Add(1)
+    go startDownloadWorker(host, targetPath, remoteFiles, &wg)
+  }
+  wg.Wait()
 }
 
 func newCopyCommand() func (c *cli.Context) {
