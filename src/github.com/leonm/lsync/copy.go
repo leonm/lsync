@@ -60,6 +60,7 @@ func downloadFile(targetPath string, host string, f *FileEntry) {
 			check(err)
 			Error.Printf("Failed to download %s.  Hash Error", f.Path)
 		} else {
+			os.Remove(targetFilePath)
 			os.Rename(targetFilePath+".part", targetFilePath)
 			os.Chtimes(targetFilePath, f.Updated, f.Updated)
 			Info.Printf("Finished downloading %s", f.Path)
