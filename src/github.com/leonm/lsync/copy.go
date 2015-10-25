@@ -40,46 +40,42 @@ func ensureDirectory(targetPath string, f *FileEntry) {
 }
 
 func processPartialDownload(rootPath string, f *FileEntry, req *http.Request) {
-	targetFilePath := filepath.Join(rootPath, f.Path)
-	fileInfo, err := os.Stat(targetFilePath + ".part")
+	fileInfo, err := os.Stat(f.TempLocation(rootPath))
 	if os.IsNotExist(err) {
 		return
 	}
 	if fileInfo.Size() >= f.Size {
-		os.Remove(targetFilePath + ".part")
+		os.Remove(f.TempLocation(rootPath))
 	}
-	fmt.Println("Adding Range ", fileInfo.Size())
 	req.Header.Add("Range", fmt.Sprintf("bytes=%d-", fileInfo.Size()))
 }
 
-func downloadFile(targetPath string, host string, f *FileEntry) {
+func downloadFile(rootPath string, host string, f *FileEntry) {
 	Info.Printf("Starting to download %s", f.Path)
 	fileUrl, err := url.Parse("http://" + host + ":1978")
 	fileUrl.Path += "/files/" + f.Path
 	client := &http.Client{}
 	req, _ := http.NewRequest("GET", fileUrl.String(), nil)
-	processPartialDownload(targetPath, f, req)
+	processPartialDownload(rootPath, f, req)
 	resp, err := client.Do(req)
 	check(err)
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 && resp.StatusCode != 206 {
 		Error.Printf("Failed to download %s : %s", f.Path, resp.Status)
 	} else {
-		targetFilePath := filepath.Join(targetPath, f.Path)
-		out, err := os.OpenFile(targetFilePath+".part", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
+		out, err := os.OpenFile(f.TempLocation(rootPath), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 		check(err)
 		defer out.Close()
 		io.Copy(io.MultiWriter(out), resp.Body)
-		os.Remove(targetFilePath)
-		os.Rename(targetFilePath+".part", targetFilePath)
-		os.Chtimes(targetFilePath, f.Updated, f.Updated)
+		os.Remove(f.Location(rootPath))
+		os.Rename(f.TempLocation(rootPath), f.Location(rootPath))
+		os.Chtimes(f.Location(rootPath), f.Updated, f.Updated)
 		Info.Printf("Finished downloading %s", f.Path)
 	}
 }
 
-func needsDownloading(targetPath string, f *FileEntry) bool {
-	targetFilePath := filepath.Join(targetPath, f.Path)
-	fileInfo, err := os.Stat(targetFilePath)
+func needsDownloading(rootPath string, f *FileEntry) bool {
+	fileInfo, err := os.Stat(f.Location(rootPath))
 	if os.IsNotExist(err) {
 		return true
 	}

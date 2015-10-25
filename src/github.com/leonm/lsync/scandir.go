@@ -58,7 +58,7 @@ func (rootDirectory *RootDirectory) scan(out chan *FileEntry) {
 func (rootDirectory *RootDirectory) hash(in chan *FileEntry, out chan *FileEntry) {
 
 	for f := range in {
-		f.Hash = rootDirectory.calculateHash(filepath.Join(rootDirectory.root, f.Path))
+		f.Hash = rootDirectory.calculateHash(f.Location(rootDirectory.root))
 		out <- f
 	}
 	close(out)

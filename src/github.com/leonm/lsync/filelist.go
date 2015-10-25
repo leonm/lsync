@@ -1,6 +1,7 @@
 package main
 
 import "time"
+import "path/filepath"
 
 type FileEntry struct {
 	Path    string
@@ -33,4 +34,12 @@ func (list *FileList) update(in chan *FileEntry) {
 
 func (fileEntry *FileEntry) IsUptoDate(t time.Time, size int64) bool {
 	return fileEntry.Updated.Equal(t) && fileEntry.Size == size
+}
+
+func (fileEntry *FileEntry) Location(rootPath string) string {
+	return filepath.Join(rootPath, fileEntry.Path)
+}
+
+func (fileEntry *FileEntry) TempLocation(rootPath string) string {
+	return fileEntry.Location(rootPath) + ".part"
 }

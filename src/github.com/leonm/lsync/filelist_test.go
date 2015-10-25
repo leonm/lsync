@@ -61,3 +61,17 @@ func TestFileEntryIsNotUpToDateWhenTimeDiffers(t *testing.T) {
 		t.Errorf("file entry should not be up to date")
 	}
 }
+
+func TestFileEntryLocation(t *testing.T) {
+	entry := &FileEntry{"test1", 55, time.Now(), 0}
+	if entry.Location("/some/path") != "/some/path/test1" {
+		t.Errorf("file entry location should be correct")
+	}
+}
+
+func TestFileEntryTempLocation(t *testing.T) {
+	entry := &FileEntry{"test1", 55, time.Now(), 0}
+	if entry.TempLocation("/some/path") != "/some/path/test1.part" {
+		t.Errorf("file entry temp location should be correct")
+	}
+}
