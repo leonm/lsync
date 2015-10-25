@@ -9,7 +9,7 @@ import "io"
 import "net/url"
 import "path/filepath"
 import "sync"
-import "hash/fnv"
+import "fmt"
 
 func getList(url string) []FileEntry {
 	Info.Println("Getting List " + url)
@@ -39,32 +39,41 @@ func ensureDirectory(targetPath string, f *FileEntry) {
 	check(err)
 }
 
+func processPartialDownload(rootPath string, f *FileEntry, req *http.Request) {
+	targetFilePath := filepath.Join(rootPath, f.Path)
+	fileInfo, err := os.Stat(targetFilePath + ".part")
+	if os.IsNotExist(err) {
+		return
+	}
+	if fileInfo.Size() >= f.Size {
+		os.Remove(targetFilePath + ".part")
+	}
+	fmt.Println("Adding Range ", fileInfo.Size())
+	req.Header.Add("Range", fmt.Sprintf("bytes=%d-", fileInfo.Size()))
+}
+
 func downloadFile(targetPath string, host string, f *FileEntry) {
 	Info.Printf("Starting to download %s", f.Path)
 	fileUrl, err := url.Parse("http://" + host + ":1978")
 	fileUrl.Path += "/files/" + f.Path
-	resp, err := http.Get(fileUrl.String())
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", fileUrl.String(), nil)
+	processPartialDownload(targetPath, f, req)
+	resp, err := client.Do(req)
 	check(err)
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 200 && resp.StatusCode != 206 {
 		Error.Printf("Failed to download %s : %s", f.Path, resp.Status)
 	} else {
 		targetFilePath := filepath.Join(targetPath, f.Path)
-		out, err := os.Create(targetFilePath + ".part")
+		out, err := os.OpenFile(targetFilePath+".part", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 		check(err)
-		hasher := fnv.New64a()
 		defer out.Close()
-		io.Copy(io.MultiWriter(out, hasher), resp.Body)
-		if hasher.Sum64() != f.Hash {
-			err := os.Remove(targetFilePath + ".part")
-			check(err)
-			Error.Printf("Failed to download %s.  Hash Error", f.Path)
-		} else {
-			os.Remove(targetFilePath)
-			os.Rename(targetFilePath+".part", targetFilePath)
-			os.Chtimes(targetFilePath, f.Updated, f.Updated)
-			Info.Printf("Finished downloading %s", f.Path)
-		}
+		io.Copy(io.MultiWriter(out), resp.Body)
+		os.Remove(targetFilePath)
+		os.Rename(targetFilePath+".part", targetFilePath)
+		os.Chtimes(targetFilePath, f.Updated, f.Updated)
+		Info.Printf("Finished downloading %s", f.Path)
 	}
 }
 
